@@ -11,22 +11,23 @@ import Header from './components/Header';
 const Stack = createStackNavigator();
 
 function App() {
-    const [initializing, setInitializing] = useState(true);
+    const [initializing, setInitializing] = useState(true);  // khởi tạo
     const [user, setUser] = useState();
 
-    // Handle user state changes
+    // Xử lý các thay đổi trạng thái người dùng
     function onAuthStateChanged(user) {
         setUser(user);
-        if (initializing) setInitializing(false);
+        if (initializing) setInitializing(false); // nếu đã khởi tạo, chuyển trạng thái khởi tạo thành false
     }
 
     useEffect(() => {
-        const subscriber = firebase.auth().onAuthStateChanged(onAuthStateChanged);
+        const subscriber = firebase.auth().onAuthStateChanged(onAuthStateChanged); //để lấy ra thông tin của user đăng nhập
         return subscriber
-    }, [])
+    }, []) // gọi 1 lần khi render thôi
 
     if (initializing) return null;
 
+    // nếu người dùng đã đăng nhập trước đó
     if (!user){
         return(
             <Stack.Navigator>
@@ -38,11 +39,10 @@ function App() {
                         headerStyle: {
                             backgroundColor: '#00e4d0',
                             shadowColor: '#000',
-                            elevation: 25,
+                            elevation: 25, // đổ bóng
                             height: 150,
                             borderBottomLeftRadius: 50,
                             borderBottomRightRadius: 50,
-
                         }
                     }}
                 />
