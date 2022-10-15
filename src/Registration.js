@@ -2,18 +2,20 @@ import { View, Text, TouchableOpacity, TextInput, StyleSheet} from 'react-native
 import React, {useState} from 'react'
 import { firebase } from '../config'
 
-const Registration = () => {
+const Registration = () => {  // đăng kí tài khoản 
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
 
+    // tạo các hàm để gọi phía dưới
+    // hàm đăng kí người dùng
     registerUser = async (email, password, firstName, lastName) => {
-        await firebase.auth().createUserWithEmailAndPassword(email, password)
+        await firebase.auth().createUserWithEmailAndPassword(email, password) // tạo người dùng mới từ email và password
         .then(() => {
-            firebase.auth().currentUser.sendEmailVerification({
+            firebase.auth().currentUser.sendEmailVerification({  // gửi mail xác nhận tới email vừa đăng kí
                 handleCodeInApp: true,
-                url:'https://test-32860.firebaseapp.com',
+                url:'https://test-32860.firebaseapp.com',  //là authDomain trong config.js
             })
             .then(() => {
                 alert('Vertification sent successfully')
@@ -23,12 +25,13 @@ const Registration = () => {
             })
 
             .then(() => {
-                firebase.firestore().collection('users')
+                firebase.firestore().collection('users')    
                 .doc(firebase.auth().currentUser.uid)
-                .set({
+                .set({  // nếu chưa có sẽ được tạo, nếu có rồi thì hợp nhất với dữ liệu đã có, nạp vào
                     firstName,
                     lastName,
                     email,
+                    // createdAt: firebase.firestore().FieldValue.serverTimestamp(),
                 })
             })
             .catch((error) => {
@@ -70,9 +73,9 @@ const Registration = () => {
                     style={styles.textInput}
                     placeholder="Password"
                     onChangeText={(password) => setPassword(password)}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    secureTextEntry={true}
+                    autoCapitalize="none" //không tự động viết hoa bất cứ thứ gì.
+                    autoCorrect={false} //tắt tính năng tự động sửa.
+                    secureTextEntry={true} //kiểu nhập văn bản sẽ được che đi
                 />
             </View>
             <TouchableOpacity

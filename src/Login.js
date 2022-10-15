@@ -2,22 +2,26 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import { firebase } from '../config'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const Login = () => {
     const navigation = useNavigation(); //dùng điều hướng trang
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
 
+    // tạo các hàm để gọi phía dưới
     loginUser = async (email, password) => {
         try {
-            await firebase.auth().signInWithEmailAndPassword(email, password) // đăng nhập firebase bằng email và password đã tạo
+            // await firebase.auth().signInWithEmailAndPassword(email, password) // đăng nhập firebase bằng email và password đã tạo
+            await Promise.all([ firebase.auth().signInWithEmailAndPassword(email, password), AsyncStorage.setItem("email",JSON.stringify(email)), AsyncStorage.setItem("password",JSON.stringify(password)) ]);
         } catch (error) {
             alert(error.message)
         }
     }
 
     // forget password
-    const forgetPassword = () => {
+    function forgetPassword() {
         firebase.auth().sendPasswordResetEmail(email) //gửi thư xác nhận reset email
         .then(() => {
             alert('Đã gửi tới email thay đổi mật khẩu. Vui lòng kiểm tra email')
