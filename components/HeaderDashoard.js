@@ -21,7 +21,7 @@ const HeaderDashoard = (props) => {
   return (
     <View style={{marginLeft:15,flexDirection:'row',justifyContent:"space-between"}}>
 		<TouchableOpacity
-                onPress={() => navigation.navigate('Profilescreen')}   //////////// chuyển hướng sang trang Registration
+                onPress={() => navigation.navigate('ProfileScreen')}   //////////// chuyển hướng sang trang Registration
         >
       		<Image style ={{width: 60, height: 60}} source={require('../ICON/USER.png')}/>
         </TouchableOpacity>

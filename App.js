@@ -17,7 +17,7 @@ import HeaderDashoard from './components/HeaderDashoard';
 // import Aircon from './screen/aircon';
 // import Door from './screen/door';
 // import DoorPass from './screen/doorPass';
-// import TempScreen from './screen/temp';
+import TempScreen from './screen/temp';
 import HumidScreen from './screen/humid';
 import Profilescreen from './screen/profile';
 // import Home from './screen/home';
@@ -25,6 +25,7 @@ import Profilescreen from './screen/profile';
 // import LightScreen from './screen/light';
 // import NotificationsScreen from './screen/notification';
 // import Windows from './screen/windows';
+import BottomTab from './screen/bottomTab';
 import init from 'react_native_mqtt';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -107,7 +108,7 @@ function App() {
                 }}
             />         
             <Stack.Screen
-                name={'Profilescreen'}
+                name={'ProfileScreen'}
                 component={Profilescreen}
                 options ={{
                     headerTitle: () => <Header name="Dev Bug" />,
@@ -124,11 +125,14 @@ function App() {
                 }}
             >
             </Stack.Screen>
-            {/* <Stack.Screen
-                name={'Door Screen'}
-                component={Door}
-                options={{ headerShown: false }}>
-            </Stack.Screen> */}
+            <Stack.Screen
+                name={'TempScreen'}
+                component={TempScreen}
+                options={{ 
+                    headerTitle: () => <Header name="Dev Bug" />,
+                    headerStyle: styles.headerStyle 
+                }}>
+            </Stack.Screen>  
         </Stack.Navigator>
     );
 }

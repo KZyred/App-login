@@ -1,144 +1,138 @@
-import { LineChart } from "react-native-chart-kit";
-import { StyleSheet, Text, View, Button, TextInput, TouchableOpacity, Image, Switch, Dimensions } from 'react-native';
-import init from 'react_native_mqtt';
-import {AsyncStorage} from '@react-native-async-storage/async-storage';
-import React, { useState, useEffect, useCallback } from "react"; 
-import chart from "../components/chart";
-import { useData } from "../context/DataContext";
+import {LineChart} from "react-native-chart-kit";
+import React, {Component,useState} from 'react';
+import { StyleSheet, View, ToastAndroid, Button, Text, ActivityIndicator, Modal, Alert,Dimensions,Pressable,Image } from 'react-native';
+import { AnimatedCircularProgress } from 'react-native-circular-progress';
+import BottomTab from './bottomTab';
 
-//chart
+const MAX_POINTS = 60; //max
+export default class HumidScreen extends Component{
+  constructor(props) {
+    super(props);
+    const client = new Paho.MQTT.Client('649754c970724a85bddf6a264c15813d.s1.eu.hivemq.cloud', 8884, 'APP_Android'); 
+    client.onConnectionLost = this.onConnectionLost;
+    client.onMessageArrived = this.onMessageArrived;
+    client.connect({
+      useSSL: true, 
+      userName:'dungducghi', 
+      password:'0982839224', 
+      onSuccess: this.onConnect
+    });
+    this.state = {
+      client,
+      modal: true, //isloading.1
+      data: [0,0,0,0,0],
+      temp: [0,0,0,0,0],
+      t: '',
+      width: Dimensions.get("screen").width * 0.8,
+    };
+  }
 
+  onConnectionLost = (responseObject) => {
+    if(responseObject.errorCode !== 0){
+      ToastAndroid.show('Mất kết nối:'+responseObject.errorMessage,ToastAndroid.LONG,ToastAndroid.CENTER);
+    }
+  }
 
+  onConnect = () => {
+    const { client } = this.state;
+    client.subscribe('sensor1');
+    // ToastAndroid.show("¡kết nối thành công!",ToastAndroid.LONG,ToastAndroid.CENTER);
+    this.setState({modal: false}); //isloading.2
+  }
 
-const screenWidth = Dimensions.get('screen');
-
-function TempScreen() {
-  //const { payload, topic } = useData();
-  var [data, setData] = useState([26.0, 26.0, 27.0, 27.0, 26.0]);
-  var temp = [26.0, 26.0, 27.0, 27.0, 26.0];
-  const [t, setT] = useState();
-  //data.shift();
-  //data.push(6);
-  /*useEffect(() => {
-    if (topic == 'thienkun/feeds/test')
+  onMessageArrived = (message) => {
+    const {temp} = this.state;
+    // console.log("onMessageArrived:" + message.payloadString);
+    if (message.topic == "sensor1")
     {
-      if (temp.length == 5)
-        temp.shift();
-      temp.push(parseInt(payload));
-      setData(temp);
+      let arrayStrig = message.payloadString.split(",");
+      if (temp.length == 5)  // nếu mảng độ dài 5,  var humid = [50, 51, 49, 51, 51];
+      {
+        temp.shift(); // loại bỏ phần tử đầu tiên của mảng vd 50
+      }
+      temp.push(parseFloat(arrayStrig[0])); // thêm vào cuối mảng 1 phần tử mới
+      this.setState({t:parseInt(arrayStrig[0])});
+      this.setState({data:temp});
     }
-  }, [payload, topic]);*/
-  const feeds = ['thienkun/feeds/onoff', 'thienkun/feeds/test', 'thienkun/feeds/humid', 'thienkun/feeds/temp', 'tentoila24/feeds/temp'];
-    //const topic = feeds[1];
-    
-    const password = //'aio_EVNi18eQsuWTkmrRxnPTKC8ZV5KJ';
-    //'aio_MRjJ42fgnx14P2x4aAIy6OuylnNQ';
-    'aio_usWu17O0FXcVE3lAletS2mcJS1I1';
-    //const uri = 'mqtts://#thienkun:#aio_VwGf00hR9EfUZuJVX8yvnIwuGEf2@io.adafruit.com';
-    const mqttHost = 'io.adafruit.com';
-    
-    var client;
-    
-    function mqtt() {
-        var clientID = "myclientid_" + new Date().getTime() + new Date();
-        client = new Paho.MQTT.Client(mqttHost, 443, clientID);
-        // set callback handlers
-        client.onConnectionLost = onConnectionLost;
-        client.onMessageArrived = onMessageArrived;
-        // connect the client
-        client.connect({onSuccess:subscribe, onFailure: check, useSSL: true, userName: 'tentoila24', password: password, keepAliveInterval: 1000 });
-    }
-    function check() 
-    {
-        console.log('No connection');
-    }
-    
-    function subscribe()
-    {
-        client.subscribe(feeds[4]);
-    }
-    
-    // called when the client connects
-    
-    // called when the client loses its connection
-    function onConnectionLost(responseObject) {
-        if (responseObject.errorCode !== 0) {
-            console.log("onConnectionLost:" + responseObject.errorMessage);
-        }
-    }
+  }
 
-    
+  render() {
+    const { modal, data, temp,t,width } = this.state;
+    const fill = (t / MAX_POINTS) * 100; // tỉ lệ %
+    const { navigation } = this.props; //props nhảy sang màn hình khác ?????????????
+    return (
+    <View style={{flex:1}}>
+      <View style={{justifyContent:"center",alignItems:"center", paddingTop:29}}>
+        <AnimatedCircularProgress
+            size={250}
+            width={36}
+            backgroundWidth={21}
+            fill={fill}
+            tintColor="#70ff33"
+            tintColorSecondary="#ff6a0d"
+            backgroundColor="#e6d5f0"
+            arcSweepAngle={240}
+            rotation={240}
+            lineCap="round"
+          >
+              {
+                (fill) => (
+                  <Text style = {styles.textData}>
+                    {t}°C
+                  </Text>
+                )
+              } 
+        </AnimatedCircularProgress>
+      </View>
+      <View style={{marginHorizontal: '5%', alignItems:"center"}}>
+        <Text> Temperature Line Chart</Text>
+        <LineChart
+            data={{
+              labels: ["1 min", "45 sec", "30 sec", "15 sec", "Now"],
+              datasets: [{data: data}]
+            }}
+            width={width} 
+            height={220}
+            chartConfig={{
+            backgroundColor: "#e26a00",
+            backgroundGradientFrom: "#fb8c00",
+            backgroundGradientTo: "#ffa726",
+            decimalPlaces: 2, // optional, defaults to 2dp
+            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+            labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+            style: {
+                borderRadius: 16
+            },
+            propsForDots: {
+                r: "6",
+                strokeWidth: "2",
+                stroke: "#ffa726"
+            }
+            }}
+            bezier
+            style={{
+            marginVertical: 8,
+            borderRadius: 16
+            }}
+        />
+      </View>
+      <BottomTab navigation={navigation}/>
+      {/* <Button title="Refresh" onPress={refresh_data} />  */}
+        <Modal animationType="slide"  transparent={true} visible={modal} >  
+        {/* //modal ?! (transparent mờ đi gần như hết model chỉ hiện nội dung) */}
+          <View style={{flex:1, justifyContent:"center", backgroundColor:"black" ,opacity:0.1}}>
+            <ActivityIndicator color="black" size = {100}/>
+          </View>
+        </Modal>
 
-    // called when a message arrives
-    function onMessageArrived(message) {
-        console.log("onMessageArrived:" + message.payloadString);
-        //setTopic(message.topic);
-        //setPayload(message.payloadString);
-        if (message.topic == feeds[4])
-        {
-          if (temp.length == 5)
-          {
-            temp.shift();
-          }
-          temp.push(parseInt(message.payloadString));
-          setData(temp);
-          setT(parseInt(message.payloadString))
-        }
-        
-    }
-  
-  // function refresh_data() {};
-  mqtt();
-  const width = Dimensions.get("screen").width * 0.8;
-
-  return(
-    <View style={{margin: '10%'}}>
-      <Text> Temperature Line Chart</Text>
-      <LineChart
-          data={{
-            labels: ["1 min", "45 sec", "30 sec", "15 sec", "Now"],
-            datasets: [{data: data}]
-          }}
-          width={width} // from react-native
-          height={220}
-          //yAxisLabel= 
-          //yAxisInterval={1} // optional, defaults to 1
-          chartConfig={{
-          backgroundColor: "#e26a00",
-          backgroundGradientFrom: "#fb8c00",
-          backgroundGradientTo: "#ffa726",
-          decimalPlaces: 2, // optional, defaults to 2dp
-          color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-          labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-          style: {
-              borderRadius: 16
-          },
-          propsForDots: {
-              r: "6",
-              strokeWidth: "2",
-              //stroke: "#ffa726"
-          }
-          }}
-          bezier
-          style={{
-          marginVertical: 8,
-          borderRadius: 16
-          }}
-      />
-      <Text style={{alignSelf: 'center'}}> Temperature </Text>
-      {/* <Button title="Refresh" onPress={refresh_data} />   */}
-      {/* <Text style={{alignSelf: 'center', margin: '20%'}}>{t}</Text> */}
+      {/* <Text style={{margin: '20%'}}>{t}</Text> */}
   </View>
-  )
+    );
+  }
 }
-
-/*const LightDensity = ({ onPress, title}) => (
-  <TouchableOpacity style={styles.circleContainer}>
-    <Text style={{ fontSize: 40, alignSelf: 'center'}}>{title}</Text>
-  </TouchableOpacity>
-);
 const styles = StyleSheet.create({
-  
-})*/
-export default TempScreen;
-
+  textData:{
+    fontSize: 36,
+    fontWeight: '300',
+  }
+});
