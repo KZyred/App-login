@@ -15,7 +15,7 @@ const Registration = () => {  // đăng kí tài khoản
         .then(() => {
             firebase.auth().currentUser.sendEmailVerification({  // gửi mail xác nhận tới email vừa đăng kí
                 handleCodeInApp: true,
-                url:'https://test-32860.firebaseapp.com',  //là authDomain trong config.js
+                url:'https://test-32880.firebaseapp.com',  //là authDomain trong config.js
             })
             .then(() => {
                 alert('Vertification sent successfully')

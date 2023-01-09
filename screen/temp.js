@@ -8,7 +8,7 @@ const MAX_POINTS = 60; //max
 export default class HumidScreen extends Component{
   constructor(props) {
     super(props);
-    const client = new Paho.MQTT.Client('649754c970724a85bddf6a264c15813d.s1.eu.hivemq.cloud', 8884, 'APP_Android'); 
+    const client = new Paho.MQTT.Client('649754c980724a85bddfaa264c15813d.s1.eu.hivemq.cloud', 8884, 'APP_Android'); 
     client.onConnectionLost = this.onConnectionLost;
     client.onMessageArrived = this.onMessageArrived;
     client.connect({
